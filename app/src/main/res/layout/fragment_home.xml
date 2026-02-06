@@ -13,19 +13,21 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/topBar"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_width="59dp"
+        android:layout_height="56dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="48dp"
         android:layout_marginEnd="24dp"
         app:cardCornerRadius="25dp"
         app:cardElevation="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/map"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.053"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.055">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:gravity="center_vertical"
             android:paddingStart="16dp"
@@ -38,26 +40,12 @@
                 android:src="@drawable/ic_menu_bars"
                 app:tint="#757575" />
 
-            <TextView
-                android:id="@+id/tvSearchText"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:text="Search Safe Zones..."
-                android:textColor="#212121"
-                android:textSize="16sp" />
 
-            <ImageView
-                android:id="@+id/btnSearchIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_search"
-                app:tint="#1976D2" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/materialCardView2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
@@ -77,17 +65,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Emergency Actions"
+                android:textColor="#000000"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#000000" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:text="Current Location: UiTM Jasin Campus"
-                android:textSize="14sp"
                 android:textColor="#757575"
-                android:layout_marginBottom="16dp"/>
+                android:textSize="14sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -98,25 +86,25 @@
                     android:id="@+id/btnSOS"
                     android:layout_width="0dp"
                     android:layout_height="60dp"
-                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="SOS Alert"
+                    android:layout_weight="1"
                     android:backgroundTint="#D32F2F"
+                    android:text="SOS Alert"
+                    app:cornerRadius="12dp"
                     app:icon="@drawable/ic_alert"
-                    app:iconGravity="textStart"
-                    app:cornerRadius="12dp"/>
+                    app:iconGravity="textStart" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnShare"
                     android:layout_width="0dp"
                     android:layout_height="60dp"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="Share Loc"
+                    android:layout_weight="1"
                     android:backgroundTint="#1976D2"
+                    android:text="Share Loc"
+                    app:cornerRadius="12dp"
                     app:icon="@drawable/ic_share_loc"
-                    app:iconGravity="textStart"
-                    app:cornerRadius="12dp"/>
+                    app:iconGravity="textStart" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

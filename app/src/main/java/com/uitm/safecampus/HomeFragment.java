@@ -57,9 +57,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         Button btnSOS = view.findViewById(R.id.btnSOS);
         Button btnShare = view.findViewById(R.id.btnShare);
         ImageView btnMenu = view.findViewById(R.id.btnMenu);
-        ImageView btnSearchIcon = view.findViewById(R.id.btnSearchIcon);
-        TextView tvSearchText = view.findViewById(R.id.tvSearchText);
-
         // --- MENU LOGIC ---
         btnMenu.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(getContext(), btnMenu);
@@ -108,8 +105,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     .setNegativeButton("Cancel", null)
                     .show();
         };
-        tvSearchText.setOnClickListener(searchAction);
-        btnSearchIcon.setOnClickListener(searchAction);
 
         // --- SOS BUTTON ---
         btnSOS.setOnClickListener(v -> {
