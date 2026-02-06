@@ -41,7 +41,7 @@ public class AboutFragment extends Fragment {
             btnGithub.setOnClickListener(v -> {
                 Toast.makeText(getActivity(), "Opening Browser...", Toast.LENGTH_SHORT).show();
                 // Replace with your actual GitHub link
-                String url = "https://github.com/YourUsername/SafeCampus";
+                String url = "https://github.com/yanssama1276/ICT602-";
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 startActivity(i);
