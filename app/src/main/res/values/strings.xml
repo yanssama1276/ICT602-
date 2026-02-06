@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">SafeCampus</string>
+
+    <string-array name="incident_types">
+        <item>Accident</item>
+        <item>Crime / Theft</item>
+        <item>Suspicious Activity</item>
+        <item>Fire / Hazard</item>
+        <item>Medical Emergency</item>
+        <item>Damaged Facilities</item>
+        <item>Other</item>
+    </string-array>
+</resources>
