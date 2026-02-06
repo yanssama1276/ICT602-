@@ -50,6 +50,7 @@ dependencies {
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-auth")
 
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

@@ -1,6 +1,7 @@
 package com.uitm.safecampus;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -17,13 +18,19 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.database.DatabaseReference;
@@ -46,8 +53,8 @@ public class ReportFragment extends Fragment {
     private FusedLocationProviderClient fusedLocationClient;
     private FirebaseFirestore db;
     private DatabaseReference rtdb;
-    private com.google.android.gms.location.LocationCallback locationCallback;
-    // Member variables to store numeric coordinates
+    private LocationCallback locationCallback;
+
     private double currentLat = 0.0;
     private double currentLng = 0.0;
 
@@ -55,7 +62,7 @@ public class ReportFragment extends Fragment {
     private final Runnable timeRunnable = new Runnable() {
         @Override
         public void run() {
-            if (tvAutoTime != null) {
+            if (tvAutoTime != null && isAdded()) {
                 String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
                 tvAutoTime.setText(currentTime);
             }
@@ -80,9 +87,11 @@ public class ReportFragment extends Fragment {
         ImageButton btnBack = view.findViewById(R.id.btnFloatingBack);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), DashboardActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                if (getActivity() != null) {
+                    Intent intent = new Intent(getActivity(), DashboardActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                }
             });
         }
 
@@ -103,70 +112,38 @@ public class ReportFragment extends Fragment {
                 report.put("description", description);
                 report.put("location", location);
                 report.put("time", time);
-                // Include raw numeric coordinates for mapping/analysis
                 report.put("latitude", currentLat);
                 report.put("longitude", currentLng);
 
                 db.collection("reports")
                         .add(report)
                         .addOnSuccessListener(documentReference -> {
-                            Log.d("Firestore", "DocumentSnapshot added with ID: " + documentReference.getId());
                             Toast.makeText(requireContext(), "Report Submitted Successfully!", Toast.LENGTH_LONG).show();
+                            rtdb.child(documentReference.getId()).setValue(report);
 
-                            // Use the Firestore document ID to keep Realtime Database in sync
-                            String docId = documentReference.getId();
-                            rtdb.child(docId).setValue(report)
-                                    .addOnSuccessListener(aVoid -> Log.d("RealtimeDB", "Data synced successfully."))
-                                    .addOnFailureListener(e -> Log.w("RealtimeDB", "Error syncing data.", e));
-
-                            etDescription.setText("");
-                            Intent intent = new Intent(getActivity(), DashboardActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
+                            if (getActivity() != null) {
+                                Intent intent = new Intent(getActivity(), DashboardActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                            }
                         })
-                        .addOnFailureListener(e -> {
-                            Log.w("Firestore", "Error adding document", e);
-                            Toast.makeText(requireContext(), "Error submitting report.", Toast.LENGTH_SHORT).show();
-                        });
+                        .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error submitting report.", Toast.LENGTH_SHORT).show());
             }
         });
 
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        timeHandler.post(timeRunnable);
-        if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
-            ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        timeHandler.removeCallbacks(timeRunnable);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
-            ((AppCompatActivity) getActivity()).getSupportActionBar().show();
-        }
-    }
-
     private void captureLocation() {
-        com.google.android.gms.location.LocationRequest locationRequest =
-                com.google.android.gms.location.LocationRequest.create()
-                        .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
-                        .setInterval(5000) // Update every 5 seconds
-                        .setFastestInterval(2000);
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+                .setMinUpdateIntervalMillis(2000)
+                .build();
 
-        locationCallback = new com.google.android.gms.location.LocationCallback() {
+        locationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(@NonNull com.google.android.gms.location.LocationResult locationResult) {
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                if (!isAdded()) return; // Safety check for Fragment attachment
+
                 for (android.location.Location location : locationResult.getLocations()) {
                     if (location != null) {
                         currentLat = location.getLatitude();
@@ -182,23 +159,61 @@ public class ReportFragment extends Fragment {
         }
     }
 
-    // Helper to keep code clean
     private void updateAddressUI(double lat, double lng) {
+        // Guard Clause: Exit if fragment is not currently attached
+        if (!isAdded() || getContext() == null) return;
+
+        // Use Application Context to survive the thread even if fragment detaches briefly
+        Context appContext = requireContext().getApplicationContext();
+
         new Thread(() -> {
             try {
-                Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+                Geocoder geocoder = new Geocoder(appContext, Locale.getDefault());
                 List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+
                 String coordString = String.format(Locale.getDefault(), "(%.4f, %.4f)", lat, lng);
                 String finalAddress = (addresses != null && !addresses.isEmpty())
                         ? addresses.get(0).getAddressLine(0) + " " + coordString
                         : "Coordinates: " + coordString;
 
+                // Check again before updating the UI
                 if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> tvAutoLocation.setText(finalAddress));
+                    getActivity().runOnUiThread(() -> {
+                        if (isAdded() && tvAutoLocation != null) {
+                            tvAutoLocation.setText(finalAddress);
+                        }
+                    });
                 }
             } catch (IOException e) {
                 Log.e("GEO", "Geocoder failed", e);
             }
         }).start();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        timeHandler.post(timeRunnable);
+        if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        timeHandler.removeCallbacks(timeRunnable);
+        // CRITICAL: Stop location updates when not visible to avoid background crashes
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (getActivity() != null && ((AppCompatActivity) getActivity()).getSupportActionBar() != null) {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().show();
+        }
     }
 }
